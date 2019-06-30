@@ -3,7 +3,7 @@
 
 import requests
 from bs4 import BeautifulSoup
-
+import csv
 
 class OcuFetcher():
 
@@ -11,9 +11,26 @@ class OcuFetcher():
 
     def __init__(self):
         self.data = []
+        self.global_counter = 0
 
-    def fetch(self):
-        page = requests.get(self.DATA_SOURCE)
+    def export_csv(self):
+        with open('../../data/ocu.csv', mode='a+') as csv_file:
+
+            csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+            csv_writer.writerow(['title', 'quality_overall', 'quality_overall_info', 'spec_content',
+                         'spec_spf', 'spec_container', 'provider_value',
+                         'picture_image', 'laboratory', 'users', 'tagging'])
+
+            for row in self.data:
+                csv_writer.writerow([row['title'], row['quality_overall'], row['quality_overall_info'], row['spec_content'], row['spec_spf'], row['spec_container'], row['provider_value'], row['picture_image'], row['laboratory'], row['users'], row['tagging']])
+
+    def fetch(self, page_link = None):
+
+        if not page_link:
+            page_link = self.DATA_SOURCE
+
+        page = requests.get(page_link)
 
         if page.status_code == 200:
 
@@ -27,7 +44,8 @@ class OcuFetcher():
 
                 if elements:
                     for counter, element in enumerate(elements):
-                        print('Element ' + str(counter) + ' found:')
+                        self.global_counter += 1
+                        print('Global: ' + str(self.global_counter) + ' Element in page ' + str(counter) + ' found:')
 
                         title = element.find('div', attrs={'class' : 'recommended__listing__item__title'})
 
@@ -84,29 +102,71 @@ class OcuFetcher():
                             data_picture_image = picture_image.find('img').get('src').strip()
                             print('Picture Image: ' + data_picture_image)
 
+                        # @TODO: Fetch here ajax POST properties from
 
+                        quality_badge = element.find('div', attrs={'class' : 'quality-badge'})
+
+                        if quality_badge:
+                            product_id =  quality_badge.get('data-selector').replace('open-quality-box-', '')
+                            print('Selector: ' + product_id)
+
+                            ajax_page = requests.post('https://www.ocu.org/ProductSelectorsAPI/PsfQualityBoxes/RenderQualityBox/084056b0-d25d-4df8-8036-210e53b06fe8',
+                                         data = {'productId': product_id, 'mainPageId': '43ee393ea9394a7f8d7d442d663fe29f', 'isModel': 'false' },
+                                         headers = {'x-requested-with': 'XMLHttpRequest'})
+
+                            if ajax_page.status_code == 200:
+                                ajax_content = ajax_page.json()
+                                ajax_content_soup = ajax_content['Updates'][0]['Html']
+
+                                ajax_soup = BeautifulSoup(ajax_content_soup, 'html.parser')
+
+                                boxes = ajax_soup.find_all('span', attrs={'class' : 'quality-boxes__indicators__item-bar-value'})
+
+                                if boxes:
+                                    laboratory = boxes[0].text
+                                    users = boxes[1].text
+                                    tagging = boxes[2].text
+
+                                    print('Laboratory: ' + laboratory)
+                                    print('Users: ' + users)
+                                    print('Tagging: ' + tagging)
 
                         self.data.append(
                             {
-                                'title': data_title,
-                                'link': data_link,
-                                'quality_overall': data_quality_overall,
-                                'quality_overall_info': data_quality_overall_info,
-                                'spec_content': data_spec_content,
-                                'spec_spf': data_spec_spf,
-                                'spec_container': data_spec_container,
-                                'provider_value': data_provider_value,
-                                'picture_image': data_picture_image,
+                                'title': data_title.encode('utf-8'),
+                                'link': data_link.encode('utf-8'),
+                                'quality_overall': data_quality_overall.encode('utf-8'),
+                                'quality_overall_info': data_quality_overall_info.encode('utf-8'),
+                                'spec_content': data_spec_content.encode('utf-8'),
+                                'spec_spf': data_spec_spf.encode('utf-8'),
+                                'spec_container': data_spec_container.encode('utf-8'),
+                                'provider_value': data_provider_value.encode('utf-8'),
+                                'picture_image': data_picture_image.encode('utf-8'),
+                                'laboratory': laboratory.encode('utf-8'),
+                                'users': users.encode('utf-8'),
+                                'tagging': tagging.encode('utf-8'),
                             })
 
                         print
 
-            print('Data to store')
-            print(self.data)
+            next_page =soup.find('li', attrs={'class' : 'pagination__item--next'})
+
+            if next_page:
+                next_page_link = 'https://www.ocu.org/' + next_page.a.get('href')
+                print('Processing next page: ' + next_page_link)
+                self.fetch(next_page_link)
+
 
     def run(self):
         print('Running Ocu Fetcher')
-        self.fetch()
+        self.fetch(None)
+
+        print('Data to store')
+        print(self.data)
+
+        print('Exporting to CSV')
+        self.export_csv()
+        print('Done')
 
 
 OcuFetcher().run()
