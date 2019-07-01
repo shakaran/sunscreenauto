@@ -149,13 +149,16 @@ class OcuFetcher():
 
                         print
 
-            next_page =soup.find('li', attrs={'class' : 'pagination__item--next'})
+                self.check_next_page(soup)
 
-            if next_page:
-                next_page_link = 'https://www.ocu.org/' + next_page.a.get('href')
-                print('Processing next page: ' + next_page_link)
-                self.fetch(next_page_link)
 
+    def check_next_page(self, soup):
+        next_page =soup.find('li', attrs={'class' : 'pagination__item--next'})
+
+        if next_page:
+            next_page_link = 'https://www.ocu.org/' + next_page.a.get('href')
+            print('Processing next page: ' + next_page_link)
+            self.fetch(next_page_link)
 
     def run(self):
         print('Running Ocu Fetcher')
