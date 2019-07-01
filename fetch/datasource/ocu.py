@@ -127,7 +127,7 @@ class OcuFetcher():
                 data_spec_spf = data_specs[1].text.replace('SPF: ', '').strip()
                 print('SPF: ' + data_spec_spf)
 
-            data_spec_container = None
+            data_spec_container = ''
             if len(data_specs) > 2:
                 data_spec_container = data_specs[2].text.replace('Precio por envase: ', '').strip()
                 print('Price by container: ' + data_spec_container)
