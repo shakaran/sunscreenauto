@@ -14,7 +14,7 @@ class OcuFetcher():
         self.global_counter = 0
 
     def export_csv(self):
-        with open('../../data/ocu.csv', mode='a+') as csv_file:
+        with open('../../data/ocu.csv', mode='a+', encoding='utf8') as csv_file:
 
             csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
