@@ -23,7 +23,9 @@ class OcuFetcher():
                          'picture_image', 'laboratory', 'users', 'tagging'])
 
             for row in self.data:
-                csv_writer.writerow([row['title'], row['quality_overall'], row['quality_overall_info'], row['spec_content'], row['spec_spf'], row['spec_container'], row['provider_value'], row['picture_image'], row['laboratory'], row['users'], row['tagging']])
+                csv_writer.writerow([row['title'], row['quality_overall'], row['quality_overall_info'], row['spec_content'], \
+                                     row['spec_spf'], row['spec_container'], row['provider_value'], row['picture_image'],    \
+                                     row['laboratory'], row['users'], row['tagging']])
 
     def fetch(self, page_link = None):
 
