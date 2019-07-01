@@ -149,8 +149,8 @@ class OcuFetcher():
         picture_image = element.find('a', attrs={'class' : 'recommended__picture-image'})
 
         if picture_image:
-           data_picture_image = 'https:' + picture_image.find('img').get('src').strip()
-           print('Picture Image: ' + data_picture_image)
+            data_picture_image = 'https:' + picture_image.find('img').get('src').strip()
+            print('Picture Image: ' + data_picture_image)
 
         return data_picture_image
 
