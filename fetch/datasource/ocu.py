@@ -72,7 +72,7 @@ class OcuFetcher():
                                 'spec_spf': data_spec_spf.encode('utf-8'),
                                 'spec_container': data_spec_container.encode('utf-8'),
                                 'provider_value': data_provider_value.encode('utf-8'),
-                                'picture_image': data_picture_image.encode('utf-8'),
+                                'picture_image': 'https:' + data_picture_image.encode('utf-8'),
                                 'laboratory': laboratory.encode('utf-8'),
                                 'users': users.encode('utf-8'),
                                 'tagging': tagging.encode('utf-8'),
