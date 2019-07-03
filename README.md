@@ -5,6 +5,6 @@ A simple example of web auto for the keyword "cremas solares". With ❤️  for 
 
 For execute the Ocu Fetcher scraper and generate the data source (images and CSV):
 
-```python
+```cli
 python3 fetch/datasource/ocu.py
-´´´
+```
