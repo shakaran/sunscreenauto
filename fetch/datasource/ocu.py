@@ -3,18 +3,21 @@
 
 import requests
 from bs4 import BeautifulSoup
+from pathlib import Path
 import csv
 
 class OcuFetcher():
 
     DATA_SOURCE = 'https://www.ocu.org/salud/cuidado-piel/test/cremas-solares/results'
+    IMAGES_PATH = 'data/ocu/'
+    CSV_PATH = 'data/ocu.csv'
 
     def __init__(self):
         self.data = []
         self.global_counter = 0
 
     def export_csv(self):
-        with open('../../data/ocu.csv', mode='a+', encoding='utf8') as csv_file:
+        with open(self.CSV_PATH, mode='a+', encoding='utf8') as csv_file:
 
             csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
@@ -144,6 +147,13 @@ class OcuFetcher():
 
         return data_provider_value
 
+    def download_file_image(self, image_url):
+        page_image = requests.get(image_url, stream=True)
+        if page_image.status_code == 200:
+            print(Path(image_url).stem)
+            with open(self.IMAGES_PATH + Path(image_url).stem + '.jpg', 'wb') as image_file:
+                for chunk in page_image:
+                    image_file.write(chunk)
 
     def fetch_picture_image(self, element):
         picture_image = element.find('a', attrs={'class' : 'recommended__picture-image'})
@@ -151,6 +161,9 @@ class OcuFetcher():
         if picture_image:
             data_picture_image = 'https:' + picture_image.find('img').get('src').strip()
             print('Picture Image: ' + data_picture_image)
+
+            self.download_file_image(data_picture_image)
+
 
         return data_picture_image
 
