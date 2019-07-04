@@ -55,7 +55,7 @@ class OcuFetcher():
 
                         data_quality_overall = self.fetch_quality_overall(element)
 
-                        data_quality_overall_info = self.quality_overall_info(element)
+                        data_quality_overall_info = self.fetch_quality_overall_info(element)
 
                         (data_spec_content, data_spec_spf, data_spec_container) = self.fetch_specs(element)
 
@@ -64,6 +64,9 @@ class OcuFetcher():
                         data_picture_image = self.fetch_picture_image(element)
 
                         (laboratory, users, tagging) = self.fetch_quality_badge_info(element)
+
+                        # @TODO Improve me please!
+                        self.fetch_inside_page(data_link)
 
                         self.data.append(
                             {
@@ -84,6 +87,35 @@ class OcuFetcher():
                         print
 
                 self.check_next_page(soup)
+
+    def fetch_inside_page(self, inside_link):
+        if inside_link:
+            page = requests.get('https://www.ocu.org' + inside_link)
+
+        if page.status_code == 200:
+
+            # @TODO REFACTOR ME HERE in functions
+            soup = BeautifulSoup(page.content.decode('utf-8', 'ignore'), 'html.parser')
+
+            location = soup.find('div', attrs={'class' : 'recommended-detail__floating__wtb align-central'})
+
+            print('Location: ' + location.text.strip().replace('Localización ', ''))
+
+            item_images = soup.find_all('div', attrs={'class' : 'owl-detail-item__picture'})
+
+            for image in item_images:
+                print('Item image: ' + image.find('img').get('src'))
+
+                """ @TODO Challenge
+                ul              split split--striped split--padded
+
+                <strong data-selector="PC_FeatureValue" class="split__value split__narrow deci">
+                Sí
+                </strong>
+
+                <h3 data-selector="PC_GroupLabel" class="epsilon">Ingredientes</h3>
+                """
+
 
     def fetch_title_link(self, element):
         title = element.find('div', attrs={'class' : 'recommended__listing__item__title'})
@@ -107,7 +139,7 @@ class OcuFetcher():
 
         return data_quality_overall
 
-    def quality_overall_info(self, element):
+    def fetch_quality_overall_info(self, element):
         quality_overall_info = element.find('span', attrs={'class' : 'quality-badge__info'})
 
         if quality_overall_info:
