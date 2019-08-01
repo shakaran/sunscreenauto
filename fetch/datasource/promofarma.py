@@ -21,7 +21,7 @@ class PromofarmaFetcher():
     def export_csv(self):
         with open(self.CSV_PATH, mode='a+', encoding='utf8') as csv_file:
 
-            csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
             csv_writer.writerow(['title', 'provider_value', 'Actually_discount' , 'link' , \
                 'Rate_value', 'image_one','description','data_professional_advice' ])

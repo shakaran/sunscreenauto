@@ -20,16 +20,16 @@ class MifarmaFetcher():
     def export_csv(self):
         with open('self.CSV_PATH', mode='a+', encoding='utf8') as csv_file:
 
-            csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
-            csv_writer.writerow(['title', 'quality_overall', 
+            csv_writer.writerow(['title', 'quality_overall',
                          'price', 'picture_image', 'laboratory', 'laboratory_logo'])
 
             for row in self.data:
                 csv_writer.writerow([row['title'], row['quality_overall'], row['price'], row['picture_image'],
                                      row['laboratory'], row['laboratory_logo']])
 
-    
+
 
     def fetch(self, page_link = None):
 
@@ -71,7 +71,7 @@ class MifarmaFetcher():
                                 'picture_image': data_picture_image,
                                 'laboratory': laboratory_name,
                                 'laboratory_logo': logo
-                                
+
                             })
 
                         print
@@ -98,7 +98,7 @@ class MifarmaFetcher():
 
         if quality_overall:
             data_quality_overall = quality_overall.attrs["style"].replace('width:', '')
-           
+
             print('Quality Overall: ' + data_quality_overall)
 
 
@@ -138,7 +138,7 @@ class MifarmaFetcher():
 
 
     def fetch_laboratory(self, element):
-        laboratory = element.find('div', attrs={'class' : 'amshopby-link'})   
+        laboratory = element.find('div', attrs={'class' : 'amshopby-link'})
 
 
         if laboratory:
@@ -148,7 +148,7 @@ class MifarmaFetcher():
             print('Laboratory Name: ' + laboratory_name)
 
         return (laboratory_name, logo)
-  
+
 
 
     def check_next_page(self, soup):

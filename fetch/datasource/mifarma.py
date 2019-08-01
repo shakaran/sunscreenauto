@@ -16,7 +16,7 @@ class OcuFetcher():
     def export_csv(self):
         with open('../../data/mifarma.csv', mode='a+', encoding='utf8') as csv_file:
 
-            csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
             csv_writer.writerow(['title', 'quality_overall', 'quality_overall_info', 'spec_content',
                          'spec_spf', 'spec_container', 'provider_value',
