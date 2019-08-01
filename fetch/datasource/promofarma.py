@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from pathlib import Path
 import csv
+import os
 
 class PromofarmaFetcher():
 
@@ -15,8 +16,8 @@ class PromofarmaFetcher():
     def __init__(self):
         self.data = []
         self.global_counter = 0
-        self.global_counter_page = 1        
-    
+        self.global_counter_page = 1
+
     def export_csv(self):
         with open(self.CSV_PATH, mode='a+', encoding='utf8') as csv_file:
 
@@ -37,7 +38,7 @@ class PromofarmaFetcher():
         page = requests.get(page_link)
 
         if page.status_code == 200:
-            
+
             self.global_counter_page += 1
             soup = BeautifulSoup(page.content.decode('utf-8', 'ignore'), 'html.parser')
 
@@ -58,7 +59,7 @@ class PromofarmaFetcher():
                         data_discount_web = self.fetch_actually_discount(element)
 
                         rate_value = self.fetch_rate_value(element)
-                        
+
                         (image_one, description, data_professional_advice) = self.fetch_inside_page(data_link)
 
                         self.data.append(
@@ -77,8 +78,8 @@ class PromofarmaFetcher():
 
                         print
 
-                self.check_next_page(soup)                        
-    
+                self.check_next_page(soup)
+
     def fetch_title_link(self, element):
         title = element.find('div', attrs={'class' : 'flex-column'})
 
@@ -102,7 +103,7 @@ class PromofarmaFetcher():
         return data_provider_value
 
     def fetch_actually_discount(self,element):
-        discount_web_value = element.find('div',attrs={'class':'tagimg_text'}) 
+        discount_web_value = element.find('div',attrs={'class':'tagimg_text'})
 
         if discount_web_value:
             data_discount_web = discount_web_value.text
@@ -114,7 +115,7 @@ class PromofarmaFetcher():
     def fetch_rate_value(self,element):
 
         rating_value = element.find('div',attrs={'class':'rating-box'})
-        rate_value="No rating yet"
+        rate_value='' # No rating yet
         if rating_value:
             spec_rating = rating_value.find_all('meta')
             if spec_rating:
@@ -125,6 +126,10 @@ class PromofarmaFetcher():
         page_image = requests.get(image_url, stream=True)
         if page_image.status_code == 200:
             print(Path(image_url).stem)
+
+            if not os.path.exists(self.IMAGES_PATH):
+                os.mkdir(self.IMAGES_PATH)
+
             with open(self.IMAGES_PATH + Path(image_url).stem + '.jpg', 'wb') as image_file:
                 for chunk in page_image:
                     image_file.write(chunk)
@@ -139,17 +144,17 @@ class PromofarmaFetcher():
             soup = BeautifulSoup(page.content.decode('utf-8', 'ignore'), 'html.parser')
 
             description = soup.find('div', attrs={'id' : 'content-description'})
-            data_description=""
+            data_description = ''
             if description:
-                data_description =description.text.strip()
+                data_description = description.text.strip()
                 print('Description: ' + data_description)
 
 
-            data_professional_advice=""
+            data_professional_advice = ''
             professional_advice = soup.find('div', attrs={'id' : 'professional-advice'})
             if professional_advice:
-                data_professional_advice =professional_advice.text.strip()
-                print('Professional advice : ' + data_professional_advice)
+                data_professional_advice = professional_advice.text.strip()
+                print('Professional advice: ' + data_professional_advice)
 
             image_one=""
             images__box = soup.find('div', attrs={'class':'boximg'})
@@ -159,21 +164,7 @@ class PromofarmaFetcher():
                     image_one = image_one.get('src')
                     print('Image first: ' + image_one)
                     self.download_file_image(image_one)
-            """
-            item_images = soup.find_all('div', attrs={'class' : 'owl-detail-item__picture'})
 
-            for image in item_images:
-                print('Item image: ' + image.find('img').get('src'))
-
-                 @TODO Challenge
-                ul              split split--striped split--padded
-
-                <strong data-selector="PC_FeatureValue" class="split__value split__narrow deci">
-                Sí
-                </strong>
-
-                <h3 data-selector="PC_GroupLabel" class="epsilon">Ingredientes</h3>
-                """
         return (image_one, data_description,data_professional_advice)
 
     def check_next_page(self, soup):
@@ -187,10 +178,10 @@ class PromofarmaFetcher():
             print('Processing next page: ' + next_page_link)
             self.fetch(next_page_link)
         else:
-            print('---- Se termino el proceso ----')
+            print('No new pages found')
 
     def run(self):
-        print('Running Ocu Fetcher')
+        print('Running Promofarma Fetcher')
         self.fetch(None)
 
         print('Data to store')
