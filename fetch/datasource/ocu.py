@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from pathlib import Path
 import csv
+import os
 
 class OcuFetcher():
 
@@ -183,6 +184,10 @@ class OcuFetcher():
         page_image = requests.get(image_url, stream=True)
         if page_image.status_code == 200:
             print(Path(image_url).stem)
+
+            if not os.path.exists(self.IMAGES_PATH):
+                os.mkdir(self.IMAGES_PATH)
+
             with open(self.IMAGES_PATH + Path(image_url).stem + '.jpg', 'wb') as image_file:
                 for chunk in page_image:
                     image_file.write(chunk)
