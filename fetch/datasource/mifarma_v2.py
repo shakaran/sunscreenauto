@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 from pathlib import Path
+import sys
 
 class MifarmaFetcher():
 
@@ -39,6 +40,10 @@ class MifarmaFetcher():
         page = requests.get(page_link)
 
         if page.status_code == 200:
+
+            if not page.encoding in 'utf-8':
+                print('Warning: Content page enconding is not in utf8-format')
+                sys.exit(1)
 
             soup = BeautifulSoup(page.content.decode('utf-8', 'ignore'), 'html.parser')
 
@@ -164,6 +169,9 @@ class MifarmaFetcher():
 
 
     def run(self):
+        if sys.version_info[0] < 3:
+            raise Exception("You need use Python 3 to execute this script. You have: Python" + str(sys.version_info[0]))
+
         print('Running Mifarma Fetcher')
         self.fetch(None)
 

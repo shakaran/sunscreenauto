@@ -4,6 +4,7 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
+import sys
 
 class OcuFetcher():
 
@@ -36,6 +37,10 @@ class OcuFetcher():
 
         if page.status_code == 200:
 
+            if not page.encoding in 'utf-8':
+                print('Warning: Content page enconding is not in utf8-format')
+                sys.exit(1)
+
             soup = BeautifulSoup(page.content.decode('utf-8', 'ignore'), 'html.parser')
 
             listing = soup.find('div', attrs={'data-type' : 'listado-completo'})
@@ -64,18 +69,18 @@ class OcuFetcher():
 
                         self.data.append(
                             {
-                                'title': data_title.encode('utf-8'),
-                                'link': data_link.encode('utf-8'),
-                                'quality_overall': data_quality_overall.encode('utf-8'),
-                                'quality_overall_info': data_quality_overall_info.encode('utf-8'),
-                                'spec_content': data_spec_content.encode('utf-8'),
-                                'spec_spf': data_spec_spf.encode('utf-8'),
-                                'spec_container': data_spec_container.encode('utf-8'),
-                                'provider_value': data_provider_value.encode('utf-8'),
-                                'picture_image': data_picture_image.encode('utf-8'),
-                                'laboratory': laboratory.encode('utf-8'),
-                                'users': users.encode('utf-8'),
-                                'tagging': tagging.encode('utf-8'),
+                                'title': data_title,
+                                'link': data_link,
+                                'quality_overall': data_quality_overall,
+                                'quality_overall_info': data_quality_overall_info,
+                                'spec_content': data_spec_content,
+                                'spec_spf': data_spec_spf,
+                                'spec_container': data_spec_container,
+                                'provider_value': data_provider_value,
+                                'picture_image': data_picture_image,
+                                'laboratory': laboratory,
+                                'users': users,
+                                'tagging': tagging,
                             })
 
                         print
@@ -140,7 +145,7 @@ class OcuFetcher():
         if provider_value:
             data_provider_value = provider_value.text
 
-            print('Provider value: ' + str(data_provider_value.encode('utf-8').strip()))
+            print('Provider value: ' + str(data_provider_value.strip()))
 
         return data_provider_value
 
@@ -194,7 +199,10 @@ class OcuFetcher():
             self.fetch(next_page_link)
 
     def run(self):
-        print('Running Ocu Fetcher')
+        if sys.version_info[0] < 3:
+            raise Exception("You need use Python 3 to execute this script. You have: Python" + str(sys.version_info[0]))
+
+        print('Running MiFarma Fetcher')
         self.fetch(None)
 
         print('Data to store')
