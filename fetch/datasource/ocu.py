@@ -179,9 +179,9 @@ class OcuFetcher():
         provider_value = element.find('div', attrs={'class' : 'recommended__calltoaction__provider-value'})
 
         if provider_value:
-            data_provider_value = provider_value.text
+            data_provider_value = provider_value.text.strip()
 
-            print('Provider value: ' + str(data_provider_value.strip()))
+            print('Provider value: ' + data_provider_value)
 
         return data_provider_value
 
