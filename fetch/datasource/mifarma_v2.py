@@ -41,8 +41,8 @@ class MifarmaFetcher():
 
         if page.status_code == 200:
 
-            if not page.encoding in 'utf-8':
-                print('Warning: Content page enconding is not in utf8-format')
+            if not page.encoding.lower() in 'utf-8':
+                print('Warning: Content page encoding is not in utf8-format')
                 sys.exit(1)
 
             soup = BeautifulSoup(page.content.decode('utf-8', 'ignore'), 'html.parser')
@@ -137,6 +137,10 @@ class MifarmaFetcher():
         page_image = requests.get(image_url, stream=True)
         if page_image.status_code == 200:
             #print(Path(image_url).stem)
+
+            if not os.path.exists(self.IMAGES_PATH):
+                Path(self.IMAGES_PATH).mkdir(parents=True, exist_ok=True)
+
             with open(self.IMAGES_PATH + Path(image_url).stem + '.jpg', 'wb') as image_file:
                 for chunk in page_image:
                     image_file.write(chunk)

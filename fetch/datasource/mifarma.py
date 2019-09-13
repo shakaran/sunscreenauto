@@ -37,8 +37,8 @@ class OcuFetcher():
 
         if page.status_code == 200:
 
-            if not page.encoding in 'utf-8':
-                print('Warning: Content page enconding is not in utf8-format')
+            if not page.encoding.lower() in 'utf-8':
+                print('Warning: Content page encoding is not in utf8-format')
                 sys.exit(1)
 
             soup = BeautifulSoup(page.content.decode('utf-8', 'ignore'), 'html.parser')
