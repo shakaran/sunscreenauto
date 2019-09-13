@@ -24,12 +24,15 @@ class PromofarmaFetcher():
 
             csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
-            csv_writer.writerow(['title', 'provider_value', 'Actually_discount' , 'link' , \
-                'Rate_value', 'image_one','description','data_professional_advice' ])
+            csv_writer.writerow(['title', 'provider_value', 'actually_discount' , 'link' , \
+                'rate_value', 'image_one','description','data_professional_advice', \
+                'coupon_info', 'volume', 'tags', 'content_description', 'content_instructions', 'content_composition'])
 
             for row in self.data:
                 csv_writer.writerow([row['title'], row['provider_value'],row['data_discount_web'], row['link'], \
-                     row['rate_value'],row['image_one'], row['description'], row['data_professional_advice']])
+                     row['rate_value'],row['image_one'], row['description'], row['data_professional_advice'], \
+                     row['coupon_info'], row['volume'], row['tags'], row['content_description'], row['content_instructions'], row['content_composition']
+                     ])
 
     def fetch(self, page_link = None):
 
@@ -40,8 +43,8 @@ class PromofarmaFetcher():
 
         if page.status_code == 200:
 
-            if not page.encoding in 'utf-8':
-                print('Warning: Content page enconding is not in utf8-format')
+            if not page.encoding.lower() in 'utf-8':
+                print('Warning: Content page encoding is not in utf8-format', page.encoding )
                 sys.exit(1)
 
             self.global_counter_page += 1
@@ -67,23 +70,66 @@ class PromofarmaFetcher():
 
                         (image_one, description, data_professional_advice) = self.fetch_inside_page(data_link)
 
+                        (coupon_info, volume, tags, content_description, content_instructions, content_composition) = self.get_item_page(data_link)
+
                         self.data.append(
                             {
                                 'title': data_title,
                                 'link': data_link,
                                 'data_url': data_link,
-                                'provider_value' : data_provider_value,
+                                'provider_value': data_provider_value,
                                 'data_discount_web': data_discount_web,
                                 'rate_value': rate_value,
-                                'image_one':image_one,
-                                'description':description,
-                                'data_professional_advice':data_professional_advice
-
+                                'image_one': image_one,
+                                'description': description,
+                                'data_professional_advice': data_professional_advice,
+                                'coupon_info': coupon_info,
+                                'volume': volume,
+                                'tags': tags,
+                                'content_description': content_description,
+                                'content_instructions': content_instructions,
+                                'content_composition': content_composition
                             })
 
                         print
 
                 self.check_next_page(soup)
+
+    def get_item_page(self, url):
+        page = requests.get(url)
+
+        coupon_info = None
+        volume = None
+        tags = None
+        content_description = None
+        content_instructions = None
+        content_composition = None
+
+        if page.status_code == 200:
+
+            if not page.encoding.lower() in 'utf-8':
+                print('Warning: Content page encoding is not in utf8-format')
+                sys.exit(1)
+
+            soup = BeautifulSoup(page.content.decode('utf-8', 'ignore'), 'html.parser')
+
+            product_info = soup.find('div', attrs={'class' : 'product-info'})
+
+            if product_info:
+                coupon_info = product_info.find('p', attrs={'data-qa-ta' : 'couponInfo'}).text
+                volume = product_info.find('p', attrs={'class' : 'volume'}).text
+                tags = product_info.find('li', attrs={'class' : 'list-inline-item'}).text
+
+            wrapper_description = soup.find('div', attrs={'class' : 'wrapper-description'})
+
+            if wrapper_description:
+                content_description = wrapper_description.find('div', attrs={'id' : 'content-description'}).text
+                content_instructions = wrapper_description.find('div', attrs={'id' : 'content-instructions'}).text
+                content_composition = wrapper_description.find('div', attrs={'id' : 'content-composition'}).text
+
+
+        return (coupon_info, volume, tags, content_description, content_instructions, content_composition)
+
 
     def fetch_title_link(self, element):
         title = element.find('div', attrs={'class' : 'flex-column'})
@@ -133,7 +179,7 @@ class PromofarmaFetcher():
             print(Path(image_url).stem)
 
             if not os.path.exists(self.IMAGES_PATH):
-                os.mkdir(self.IMAGES_PATH)
+                Path(self.IMAGES_PATH).mkdir(parents=True, exist_ok=True)
 
             with open(self.IMAGES_PATH + Path(image_url).stem + '.jpg', 'wb') as image_file:
                 for chunk in page_image:
