@@ -4,29 +4,31 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
+from pathlib import Path
 import sys
+import os
 
-class OcuFetcher():
+class MifarmaFetcher():
 
     DATA_SOURCE = 'https://www.mifarma.es/cosmetica-y-belleza/sol/protectores-solares/'
+    IMAGES_PATH = 'data/mifarma/'
+    CSV_PATH = 'data/mifarma.csv'
 
     def __init__(self):
         self.data = []
         self.global_counter = 0
 
     def export_csv(self):
-        with open('../../data/mifarma.csv', mode='a+', encoding='utf8') as csv_file:
+        with open('self.CSV_PATH', mode='a+', encoding='utf8') as csv_file:
 
             csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
-            csv_writer.writerow(['title', 'quality_overall', 'quality_overall_info', 'spec_content',
-                         'spec_spf', 'spec_container', 'provider_value',
-                         'picture_image', 'laboratory', 'users', 'tagging'])
+            csv_writer.writerow(['title', 'quality_overall',
+                         'price', 'picture_image', 'laboratory', 'laboratory_logo'])
 
             for row in self.data:
-                csv_writer.writerow([row['title'], row['quality_overall'], row['quality_overall_info'], row['spec_content'], \
-                                     row['spec_spf'], row['spec_container'], row['provider_value'], row['picture_image'],    \
-                                     row['laboratory'], row['users'], row['tagging']])
+                csv_writer.writerow([row['title'], row['quality_overall'], row['price'], row['picture_image'],
+                                     row['laboratory'], row['laboratory_logo']])
 
     def fetch(self, page_link = None):
 
@@ -43,7 +45,7 @@ class OcuFetcher():
 
             soup = BeautifulSoup(page.content.decode('utf-8', 'ignore'), 'html.parser')
 
-            listing = soup.find('div', attrs={'data-type' : 'listado-completo'})
+            listing = soup.find('div', attrs={'class' : 'listado-completo'})
 
             if listing:
                 elements = listing.find_all('li', attrs={'class' : 'item'})
@@ -57,30 +59,22 @@ class OcuFetcher():
 
                         data_quality_overall = self.fetch_quality_overall(element)
 
-                        data_quality_overall_info = self.quality_overall_info(element)
-
-                        (data_spec_content, data_spec_spf, data_spec_container) = self.fetch_specs(element)
-
-                        data_provider_value = self.fetch_provider_value(element)
+                        price = self.fetch_specs(element)
 
                         data_picture_image = self.fetch_picture_image(element)
 
-                        (laboratory, users, tagging) = self.fetch_quality_badge_info(element)
+                        (laboratory_name, logo) = self.fetch_laboratory(element)
 
                         self.data.append(
                             {
                                 'title': data_title,
                                 'link': data_link,
                                 'quality_overall': data_quality_overall,
-                                'quality_overall_info': data_quality_overall_info,
-                                'spec_content': data_spec_content,
-                                'spec_spf': data_spec_spf,
-                                'spec_container': data_spec_container,
-                                'provider_value': data_provider_value,
+                                'price': price,
                                 'picture_image': data_picture_image,
-                                'laboratory': laboratory,
-                                'users': users,
-                                'tagging': tagging,
+                                'laboratory': laboratory_name,
+                                'laboratory_logo': logo
+
                             })
 
                         print
@@ -101,102 +95,76 @@ class OcuFetcher():
             return (None, None)
 
     def fetch_quality_overall(self, element):
-        quality_overall = element.find('span', attrs={'class' : 'quality-badge__value'})
+        quality_overall = element.find('div', attrs={'class' : 'rating'})
+        data_quality_overall = None
 
         if quality_overall:
-            data_quality_overall = quality_overall.text.strip()
+            data_quality_overall = quality_overall.attrs["style"].replace('width:', '')
+
             print('Quality Overall: ' + data_quality_overall)
+
 
         return data_quality_overall
 
-    def quality_overall_info(self, element):
-        quality_overall_info = element.find('span', attrs={'class' : 'quality-badge__info'})
-
-        if quality_overall_info:
-            data_quality_overall_info = quality_overall_info.text.strip().replace('CALIDAD', '')
-            print('Quality Overall Info: ' + data_quality_overall_info)
-
-        return data_quality_overall_info
-
     def fetch_specs(self, element):
-        specs = element.find('div', attrs={'class' : 'recommended__listing__item__specs'})
-
+        specs = element.find('span', attrs={'class' : 'price'})
+        price = None
         if specs:
-            data_specs = specs.find_all('p')
-
-            if data_specs[0]:
-                data_spec_content = data_specs[0].text.replace('Contenido: ', '').strip()
-                print('Content: ' + data_spec_content)
-
-            if data_specs[1]:
-                data_spec_spf = data_specs[1].text.replace('SPF: ', '').strip()
-                print('SPF: ' + data_spec_spf)
-
-            data_spec_container = ''
-            if len(data_specs) > 2:
-                data_spec_container = data_specs[2].text.replace('Precio por envase: ', '').strip()
-                print('Price by container: ' + data_spec_container)
-
-        return (data_spec_content, data_spec_spf, data_spec_container)
-
-    def fetch_provider_value(self, element):
-        provider_value = element.find('div', attrs={'class' : 'recommended__calltoaction__provider-value'})
-
-        if provider_value:
-            data_provider_value = provider_value.text
-
-            print('Provider value: ' + str(data_provider_value.strip()))
-
-        return data_provider_value
-
+            price = specs.text.strip()
+            print('Price: ' + price)
+        return price
 
     def fetch_picture_image(self, element):
-        picture_image = element.find('a', attrs={'class' : 'recommended__picture-image'})
+        picture_image = element.find('a', attrs={'class' : 'product-image'})
 
+        data_picture_image = None
         if picture_image:
-            data_picture_image = 'https:' + picture_image.find('img').get('src').strip()
+            data_picture_image = picture_image.find('img').get('src').strip()
             print('Picture Image: ' + data_picture_image)
+
+            self.download_file_image(data_picture_image)
 
         return data_picture_image
 
-    def fetch_quality_badge_info(self, element):
-        quality_badge = element.find('div', attrs={'class' : 'quality-badge'})
 
-        if quality_badge:
-            product_id =  quality_badge.get('data-selector').replace('open-quality-box-', '')
-            print('Selector: ' + product_id)
+    def download_file_image(self, image_url):
+        page_image = requests.get(image_url, stream=True)
+        if page_image.status_code == 200:
+            #print(Path(image_url).stem)
 
-            ajax_page = requests.post('https://www.ocu.org/ProductSelectorsAPI/PsfQualityBoxes/RenderQualityBox/084056b0-d25d-4df8-8036-210e53b06fe8',
-                         data = {'productId': product_id, 'mainPageId': '43ee393ea9394a7f8d7d442d663fe29f', 'isModel': 'false' },
-                         headers = {'x-requested-with': 'XMLHttpRequest'})
+            if not os.path.exists(self.IMAGES_PATH):
+                Path(self.IMAGES_PATH).mkdir(parents=True, exist_ok=True)
 
-            if ajax_page.status_code == 200:
-                ajax_content = ajax_page.json()
-                ajax_content_soup = ajax_content['Updates'][0]['Html']
+            with open(self.IMAGES_PATH + Path(image_url).stem + '.jpg', 'wb') as image_file:
+                for chunk in page_image:
+                    image_file.write(chunk)
 
-                ajax_soup = BeautifulSoup(ajax_content_soup, 'html.parser')
 
-                boxes = ajax_soup.find_all('span', attrs={'class' : 'quality-boxes__indicators__item-bar-value'})
+    def fetch_laboratory(self, element):
+        laboratory = element.find('div', attrs={'class' : 'amshopby-link'})
 
-                if boxes:
-                    laboratory = boxes[0].text
-                    users = boxes[1].text
-                    tagging = boxes[2].text
+        laboratory_name = ''
+        logo = ''
 
-                    print('Laboratory: ' + laboratory)
-                    print('Users: ' + users)
-                    print('Tagging: ' + tagging)
+        if laboratory:
+            logo = laboratory.find('img').get('src').strip()
+            print('Laboratory Logo Link: ' + logo)
+            laboratory_name = laboratory.find('img').get('title')
+            print('Laboratory Name: ' + laboratory_name)
 
-        return (laboratory, users, tagging)
-
+        return (laboratory_name, logo)
 
     def check_next_page(self, soup):
-        next_page =soup.find('li', attrs={'class' : 'pagination__item--next'})
+        next_page =soup.find('div', attrs={'class' : 'pages'})
 
         if next_page:
-            next_page_link = 'https://www.ocu.org/' + next_page.a.get('href')
-            print('Processing next page: ' + next_page_link)
-            self.fetch(next_page_link)
+            next_page_link = next_page.find('a', attrs={'class' : 'i-next'})
+
+            if next_page_link:
+                next_page_link_final = next_page_link.get('href')
+                print('Processing next page: ' + next_page_link_final)
+                self.fetch(next_page_link_final)
+
 
     def run(self):
         if sys.version_info[0] < 3:
@@ -213,4 +181,4 @@ class OcuFetcher():
         print('Done')
 
 
-OcuFetcher().run()
+MifarmaFetcher().run()
