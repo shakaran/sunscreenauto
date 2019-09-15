@@ -17,18 +17,21 @@ class MifarmaFetcher():
     def __init__(self):
         self.data = []
         self.global_counter = 0
+        self.page_counter = 0
 
     def export_csv(self):
-        with open('self.CSV_PATH', mode='a+', encoding='utf8') as csv_file:
+        with open(self.CSV_PATH, mode='a+', encoding='utf8') as csv_file:
 
             csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
             csv_writer.writerow(['title', 'quality_overall',
-                         'price', 'picture_image', 'laboratory', 'laboratory_logo'])
+                         'price', 'picture_image', 'laboratory', 'laboratory_logo', \
+                         'data_description', 'data_composition', 'data_mode_use'])
 
             for row in self.data:
                 csv_writer.writerow([row['title'], row['quality_overall'], row['price'], row['picture_image'],
-                                     row['laboratory'], row['laboratory_logo']])
+                                     row['laboratory'], row['laboratory_logo'], \
+                                     row['data_description'], row['data_composition'], row['data_mode_use']])
 
     def fetch(self, page_link = None):
 
@@ -39,6 +42,7 @@ class MifarmaFetcher():
 
         if page.status_code == 200:
 
+            self.page_counter += 1
             if not page.encoding.lower() in 'utf-8':
                 print('Warning: Content page encoding is not in utf8-format')
                 sys.exit(1)
@@ -53,7 +57,8 @@ class MifarmaFetcher():
                 if elements:
                     for counter, element in enumerate(elements):
                         self.global_counter += 1
-                        print('Global: ' + str(self.global_counter) + ' Element in page ' + str(counter) + ' found:')
+
+                        print('Global: ' + str(self.global_counter) + ' Element ' + str(counter) + ' in page ' + str(self.page_counter) + ' found:')
 
                         (data_link, data_title) = self.fetch_title_link(element)
 
@@ -65,6 +70,8 @@ class MifarmaFetcher():
 
                         (laboratory_name, logo) = self.fetch_laboratory(element)
 
+                        (data_description, data_composition, data_mode_use) = self.get_item_page(data_link)
+
                         self.data.append(
                             {
                                 'title': data_title,
@@ -73,13 +80,43 @@ class MifarmaFetcher():
                                 'price': price,
                                 'picture_image': data_picture_image,
                                 'laboratory': laboratory_name,
-                                'laboratory_logo': logo
-
+                                'laboratory_logo': logo,
+                                'data_description': data_description,
+                                'data_composition': data_composition,
+                                'data_mode_use': data_mode_use
                             })
 
-                        print
+                        print('')
 
                 self.check_next_page(soup)
+
+    def get_item_page(self, inside_link):
+        if inside_link:
+            page = requests.get(inside_link)
+
+        if page.status_code == 200:
+
+            soup = BeautifulSoup(page.content.decode('utf-8', 'ignore'), 'html.parser')
+
+            description = soup.find('div', attrs={'id' : 'secc-description'})
+            data_description = ''
+            if description:
+                data_description = description.find('div', attrs={'class' : 'std'}).text.strip()
+                print('Description: ' + data_description)
+
+            composition = soup.find('div', attrs={'id' : 'secc-descriptec'})
+            data_composition = ''
+            if composition:
+                data_composition = composition.text.strip()
+                print('Composition: ' + data_composition)
+
+            mode_use = soup.find('div', attrs={'id' : 'secc-modouso'})
+            data_mode_use = ''
+            if mode_use:
+                data_mode_use = mode_use.text.strip()
+                print('Mode Use: ' + data_mode_use)
+
+        return (data_description, data_composition, data_mode_use)
 
     def fetch_title_link(self, element):
         title = element.find('h2', attrs={'class' : 'product-name'})
