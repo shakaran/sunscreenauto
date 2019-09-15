@@ -7,4 +7,6 @@ For execute the Ocu Fetcher scraper and generate the data source (images and CSV
 
 ```cli
 python3 fetch/datasource/ocu.py
+python3 fetch/datasource/mifarma.py
+python3 fetch/datasource/promofarma.py
 ```
