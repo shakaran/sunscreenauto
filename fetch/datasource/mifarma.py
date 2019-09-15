@@ -20,7 +20,7 @@ class MifarmaFetcher():
         self.page_counter = 0
 
     def export_csv(self):
-        with open(self.CSV_PATH, mode='a+', encoding='utf8') as csv_file:
+        with open(self.CSV_PATH, mode='w+', encoding='utf8') as csv_file:
 
             csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
@@ -31,7 +31,8 @@ class MifarmaFetcher():
             for row in self.data:
                 csv_writer.writerow([row['title'], row['quality_overall'], row['price'], row['picture_image'],
                                      row['laboratory'], row['laboratory_logo'], \
-                                     row['data_description'], row['data_composition'], row['data_mode_use'], 'mifarma'])
+                                     row['data_description'], \
+                                     row['data_composition'], row['data_mode_use'], row['provider']])
 
     def fetch(self, page_link = None):
 
@@ -83,7 +84,8 @@ class MifarmaFetcher():
                                 'laboratory_logo': logo,
                                 'data_description': data_description,
                                 'data_composition': data_composition,
-                                'data_mode_use': data_mode_use
+                                'data_mode_use': data_mode_use,
+                                'provider': 'mifarma'
                             })
 
                         print('')
@@ -94,24 +96,28 @@ class MifarmaFetcher():
         if inside_link:
             page = requests.get(inside_link)
 
+        data_description = ''
+        data_composition = ''
+        data_mode_use = ''
+
         if page.status_code == 200:
 
             soup = BeautifulSoup(page.content.decode('utf-8', 'ignore'), 'html.parser')
 
             description = soup.find('div', attrs={'id' : 'secc-description'})
-            data_description = ''
+
             if description:
                 data_description = description.find('div', attrs={'class' : 'std'}).text.strip()
                 print('Description: ' + data_description)
 
             composition = soup.find('div', attrs={'id' : 'secc-descriptec'})
-            data_composition = ''
+
             if composition:
                 data_composition = composition.text.strip()
                 print('Composition: ' + data_composition)
 
             mode_use = soup.find('div', attrs={'id' : 'secc-modouso'})
-            data_mode_use = ''
+
             if mode_use:
                 data_mode_use = mode_use.text.strip()
                 print('Mode Use: ' + data_mode_use)

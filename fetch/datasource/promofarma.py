@@ -20,7 +20,7 @@ class PromofarmaFetcher():
         self.global_counter_page = 1
 
     def export_csv(self):
-        with open(self.CSV_PATH, mode='a+', encoding='utf8') as csv_file:
+        with open(self.CSV_PATH, mode='w+', encoding='utf8') as csv_file:
 
             csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
@@ -31,7 +31,8 @@ class PromofarmaFetcher():
             for row in self.data:
                 csv_writer.writerow([row['title'], row['provider_value'],row['data_discount_web'], row['link'], \
                      row['rate_value'],row['image_one'], row['description'], row['data_professional_advice'], \
-                     row['coupon_info'], row['volume'], row['tags'], row['content_description'], row['content_instructions'], row['content_composition'], 'promofarma'
+                     row['coupon_info'], row['volume'], row['tags'], \
+                     row['content_description'], row['content_instructions'], row['content_composition'], row['provider']
                      ])
 
     def fetch(self, page_link = None):
@@ -88,7 +89,8 @@ class PromofarmaFetcher():
                                 'tags': tags,
                                 'content_description': content_description,
                                 'content_instructions': content_instructions,
-                                'content_composition': content_composition
+                                'content_composition': content_composition,
+                                'provider': 'promofarma'
                             })
 
                         print

@@ -19,7 +19,7 @@ class OcuFetcher():
         self.global_counter = 0
 
     def export_csv(self):
-        with open(self.CSV_PATH, mode='a+', encoding='utf8') as csv_file:
+        with open(self.CSV_PATH, mode='w+', encoding='utf8') as csv_file:
 
             csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
@@ -30,7 +30,7 @@ class OcuFetcher():
             for row in self.data:
                 csv_writer.writerow([row['title'], row['quality_overall'], row['quality_overall_info'], row['spec_content'], \
                                      row['spec_spf'], row['spec_container'], row['provider_value'], row['picture_image'],    \
-                                     row['laboratory'], row['users'], row['tagging'], 'ocu'])
+                                     row['laboratory'], row['users'], row['tagging'], row['provider']])
 
     def fetch(self, page_link = None):
 
@@ -88,6 +88,7 @@ class OcuFetcher():
                                 'laboratory': laboratory,
                                 'users': users,
                                 'tagging': tagging,
+                                'provider': 'ocu'
                             })
 
                         print
