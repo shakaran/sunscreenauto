@@ -26,12 +26,12 @@ class MifarmaFetcher():
 
             csv_writer.writerow(['title', 'quality_overall',
                          'price', 'picture_image', 'laboratory', 'laboratory_logo', \
-                         'data_description', 'data_composition', 'data_mode_use'])
+                         'data_description', 'data_composition', 'data_mode_use', 'provider'])
 
             for row in self.data:
                 csv_writer.writerow([row['title'], row['quality_overall'], row['price'], row['picture_image'],
                                      row['laboratory'], row['laboratory_logo'], \
-                                     row['data_description'], row['data_composition'], row['data_mode_use']])
+                                     row['data_description'], row['data_composition'], row['data_mode_use'], 'mifarma'])
 
     def fetch(self, page_link = None):
 

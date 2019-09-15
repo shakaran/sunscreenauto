@@ -25,12 +25,12 @@ class OcuFetcher():
 
             csv_writer.writerow(['title', 'quality_overall', 'quality_overall_info', 'spec_content',
                          'spec_spf', 'spec_container', 'provider_value',
-                         'picture_image', 'laboratory', 'users', 'tagging'])
+                         'picture_image', 'laboratory', 'users', 'tagging', 'provider'])
 
             for row in self.data:
                 csv_writer.writerow([row['title'], row['quality_overall'], row['quality_overall_info'], row['spec_content'], \
                                      row['spec_spf'], row['spec_container'], row['provider_value'], row['picture_image'],    \
-                                     row['laboratory'], row['users'], row['tagging']])
+                                     row['laboratory'], row['users'], row['tagging'], 'ocu'])
 
     def fetch(self, page_link = None):
 

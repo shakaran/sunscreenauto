@@ -26,12 +26,12 @@ class PromofarmaFetcher():
 
             csv_writer.writerow(['title', 'provider_value', 'actually_discount' , 'link' , \
                 'rate_value', 'image_one','description','data_professional_advice', \
-                'coupon_info', 'volume', 'tags', 'content_description', 'content_instructions', 'content_composition'])
+                'coupon_info', 'volume', 'tags', 'content_description', 'content_instructions', 'content_composition', 'provider'])
 
             for row in self.data:
                 csv_writer.writerow([row['title'], row['provider_value'],row['data_discount_web'], row['link'], \
                      row['rate_value'],row['image_one'], row['description'], row['data_professional_advice'], \
-                     row['coupon_info'], row['volume'], row['tags'], row['content_description'], row['content_instructions'], row['content_composition']
+                     row['coupon_info'], row['volume'], row['tags'], row['content_description'], row['content_instructions'], row['content_composition'], 'promofarma'
                      ])
 
     def fetch(self, page_link = None):
